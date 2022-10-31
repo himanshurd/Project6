@@ -15,9 +15,8 @@ def ipv4_to_value(ipv4_addr):
     ipv4_addr: "1.2.3.4"
     return:    0x01020304 0b00000001000000100000001100000100 16909060
     """
+    return sum([int(i)*2**(8*j) for i,j in zip(ipv4_addr.split('.'),[3,2,1,0])])
 
-    # TODO -- write me!
-    pass
 
 def value_to_ipv4(addr):
     """
@@ -34,9 +33,8 @@ def value_to_ipv4(addr):
     addr:   0x01020304 0b00000001000000100000001100000100 16909060
     return: "1.2.3.4"
     """
+    return ".".join([str(int(addr) >> (i << 3) & 0xFF) for i in range(4)[::-1]])
 
-    # TODO -- write me!
-    pass
 
 def get_subnet_mask_value(slash):
     """
@@ -54,9 +52,9 @@ def get_subnet_mask_value(slash):
     slash:  "10.20.30.40/23"
     return: 0xfffffe00 0b11111111111111111111111000000000 4294966784
     """
+    start_bit = int(slash.split("/")[1])
+    return 0xffffffff & (0xffffffff << start_bit) 
 
-    # TODO -- write me!
-    pass
 
 def ips_same_subnet(ip1, ip2, slash):
     """
@@ -82,9 +80,11 @@ def ips_same_subnet(ip1, ip2, slash):
     slash:  "/16"
     return: False
     """
+    ip1_value = ipv4_to_value(ip1)
+    ip2_value = ipv4_to_value(ip2)
+    mask = get_subnet_mask_value(slash)
+    return (ip1_value & mask) == (ip2_value & mask)
 
-    # TODO -- write me!
-    pass
 
 def get_network(ip_value, netmask):
     """
@@ -97,8 +97,8 @@ def get_network(ip_value, netmask):
     return:   0x01020300
     """
 
-    # TODO -- write me!
-    pass
+    return ip_value & netmask
+
 
 def find_router_for_ip(routers, ip):
     """
@@ -139,8 +139,30 @@ def find_router_for_ip(routers, ip):
     return: None
     """
 
-    # TODO -- write me!
-    pass
+    for addr in routers:
+        netmask = routers[addr]["netmask"]
+        if ips_same_subnet(addr, ip, netmask):
+            return addr
+    return None  
+
+# Used to test all if the functions
+print(ipv4_to_value("198.51.100.10"),'\n')
+print(value_to_ipv4("16909060"),'\n')
+print(value_to_ipv4("4294901760"),'\n')
+print(get_subnet_mask_value("/16"),'\n')
+print(ips_same_subnet("10.23.121.17","10.23.121.225","/23"),'\n')
+print(ips_same_subnet("10.23.230.22","10.24.121.225","/16"),'\n')
+print(get_network(0x01020304, 0xffffff00),'\n')
+routers = {
+        "1.2.3.1": {
+            "netmask": "/24"
+        },
+        "1.2.4.1": {
+            "netmask": "/24"
+        }
+    }
+ip= "1.2.3.5"
+print(find_router_for_ip(routers, ip))
 
 # Uncomment this code to have it run instead of the real main.
 # Be sure to comment it back out before you submit!
